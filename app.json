@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "FireGIS Mobile",
+    "slug": "firegis-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0c0f"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.bfp.firegis"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0c0f"
+      },
+      "package": "com.bfp.firegis",
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "web": {},
+    "plugins": [
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FireGIS needs access to your photos so you can attach scene photographs to an incident report.",
+          "cameraPermission": "FireGIS needs camera access so you can take scene photographs for an incident report."
+        }
+      ]
+    ]
+  }
+}

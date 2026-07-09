@@ -1,0 +1,10 @@
+# Expo directories
+.expo/
+android/
+ios/
+
+# Claude / AI tools
+.claude/
+
+# Node Modules
+node_modules/
