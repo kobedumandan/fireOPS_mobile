@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { AppState } from 'react-native';
 import { useLocationTracking } from '../hooks/useLocationTracking';
 import { useStatusSocket } from '../hooks/useStatusSocket';
 import { BASE_URL, authHeaders } from '../constants/api';
@@ -12,6 +13,9 @@ export function AuthProvider({ children }) {
   const [token,         setToken]         = useState(null);
   const [status,        setStatus]        = useState(null);
   const [deviationState, setDeviationState] = useState(null);
+  // The responder's home station. Static per personnel, so it is cached from
+  // the login response and deliberately NOT part of the 10s status poll below.
+  const [station,       setStation]       = useState(null);
 
   const dispatch = status?.dispatch ?? null;
 
@@ -48,10 +52,33 @@ export function AuthProvider({ children }) {
     return () => clearInterval(id);
   }, [token, refreshStatus]);
 
-  const login = (userData, authToken, statusData = null) => {
+  // Re-read the cached station on app foreground. Stations don't move, but an
+  // admin can correct a bad coordinate and a session may live for days.
+  const refreshStation = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${BASE_URL}/api/mobile/me/station`, {
+        headers: authHeaders(token),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setStation(data.station ?? null);
+    } catch { /* non-fatal — keep the cached value */ }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') refreshStation();
+    });
+    return () => sub.remove();
+  }, [token, refreshStation]);
+
+  const login = (userData, authToken, statusData = null, stationData = null) => {
     setUser(userData);
     setToken(authToken ?? null);
     setStatus(statusData);
+    setStation(stationData);
   };
 
   const updateDispatchStatus = (newStatus) => {
@@ -65,6 +92,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setToken(null);
     setStatus(null);
+    setStation(null);
     setDeviationState(null);
   };
 
@@ -73,11 +101,13 @@ export function AuthProvider({ children }) {
       user,
       token,
       status,
+      station,
       deviationState,
       login,
       logout,
       updateDispatchStatus,
       refreshStatus,
+      refreshStation,
       isAuthenticated: !!user,
     }}>
       {children}

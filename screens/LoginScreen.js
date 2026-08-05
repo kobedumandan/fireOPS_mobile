@@ -70,7 +70,7 @@ export default function LoginScreen() {
         }
       }
 
-      login(userData, authToken, statusData);
+      login(userData, authToken, statusData, data.station ?? null);
     } catch {
       setError('Could not reach the server. Check your connection.');
     } finally {

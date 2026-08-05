@@ -34,10 +34,15 @@ function parseWkt(wkt) {
   });
 }
 
-function buildMapHtml({ center, fireLat, fireLng, fireAddress, routeCoords, styleUrl }) {
+function buildMapHtml({
+  center, fireLat, fireLng, fireAddress, routeCoords, styleUrl,
+  stationLat, stationLng, stationName,
+}) {
   const hasIncident = fireLat != null && fireLng != null;
+  const hasStation  = stationLat != null && stationLng != null;
   const routeJson   = JSON.stringify(routeCoords);
   const safeAddress = (fireAddress ?? 'Fire Incident').replace(/'/g, "\\'");
+  const safeStation = (stationName ?? 'Fire Station').replace(/'/g, "\\'");
 
   return `<!DOCTYPE html>
 <html>
@@ -73,6 +78,22 @@ function buildMapHtml({ center, fireLat, fireLng, fireAddress, routeCoords, styl
       0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
       100% { transform: translate(-50%,-50%) scale(3.2); opacity: 0; }
     }
+
+    /* Mirrors .station-marker in the web dashboard's MapArea.css so the origin
+       reads the same on both surfaces. The map is locked to the dark basemap
+       (FORCE_DARK), so the design tokens are resolved to their dark values:
+       --map-eco-surface #042314, --accent-green-rgb 0,230,118. */
+    /* Where a deviation branch rejoins the dispatch route. */
+    .merge-dot { width: 9px; height: 9px; border-radius: 50%;
+                 background: #ff4d1a; border: 2px solid #ffd0bf;
+                 box-shadow: 0 0 8px rgba(255,77,26,0.9); }
+
+    .station-marker { width: 28px; height: 28px;
+                 background: #042314;
+                 border: 1px solid rgba(0,230,118,0.7);
+                 border-radius: 8px;
+                 display: flex; align-items: center; justify-content: center;
+                 box-shadow: 0 0 10px rgba(0,230,118,0.7); }
   </style>
 </head>
 <body>
@@ -259,12 +280,16 @@ function buildMapHtml({ center, fireLat, fireLng, fireAddress, routeCoords, styl
         });
       }
 
-      // Reroute connector (dashed amber).
+      // Deviation branch — this responder's own path to the fire, trimmed by the
+      // backend where it converges onto the dispatch route. Takes the route's
+      // colour so the two read as one path, but stays dashed and thinner than
+      // the solid, cased route line so it's never mistaken for it. A branch that
+      // never converges is simply longer — it runs all the way to the incident.
       map.addSource('connector', { type: 'geojson', data: lineFeature([]) });
       map.addLayer({
         id: 'connector-line', type: 'line', source: 'connector',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#ffb020', 'line-width': 4, 'line-dasharray': [2, 1.5] },
+        paint: { 'line-color': '#ff4d1a', 'line-width': 3, 'line-dasharray': [2, 1.5] },
       });
 
       ${hasIncident ? `
@@ -273,6 +298,22 @@ function buildMapHtml({ center, fireLat, fireLng, fireAddress, routeCoords, styl
       new maplibregl.Marker({ element: fireEl })
         .setLngLat([${fireLng}, ${fireLat}])
         .setPopup(new maplibregl.Popup({ offset: 14 }).setHTML('<b>${safeAddress}</b>'))
+        .addTo(map);
+      ` : ''}
+
+      ${hasStation ? `
+      // Home station — anchored to the station itself, not to the route's first
+      // vertex: after a driver reroute the route is rebuilt from the truck's
+      // position, and the icon must stay on the building.
+      var stationEl = document.createElement('div');
+      stationEl.className = 'station-marker';
+      stationEl.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#00e676">' +
+        '<path d="M300-240v-360h360v360-360H300v360Zm-60 0h60v-360h360v360h60v-366L480-780 240-606v366Zm120-240h240v-60H360v60Zm120-160q17 0 28.5-11.5T520-680q0-17-11.5-28.5T480-720q-17 0-28.5 11.5T440-680q0 17 11.5 28.5T480-640ZM160-160v-400H39l441-320 440 320H800v400H600v-260H360v260H160Z"/>' +
+        '</svg>';
+      new maplibregl.Marker({ element: stationEl })
+        .setLngLat([${stationLng}, ${stationLat}])
+        .setPopup(new maplibregl.Popup({ offset: 18 }).setHTML('<b>${safeStation}</b>'))
         .addTo(map);
       ` : ''}
 
@@ -424,9 +465,25 @@ function buildMapHtml({ center, fireLat, fireLng, fireAddress, routeCoords, styl
       return best;
     }
 
-    function setConnector(coords) {
+    // mergePoint is [lng, lat] where the branch rejoins the dispatch route, or
+    // null when it never converges (an independent approach to the incident).
+    var mergeMarker = null;
+    function setConnector(coords, mergePoint) {
       var src = map.getSource('connector');
       if (src) src.setData(lineFeature(coords));
+
+      if (mergePoint && coords && coords.length >= 2) {
+        if (!mergeMarker) {
+          var dot = document.createElement('div');
+          dot.className = 'merge-dot';
+          mergeMarker = new maplibregl.Marker({ element: dot }).setLngLat(mergePoint).addTo(map);
+        } else {
+          mergeMarker.setLngLat(mergePoint);
+        }
+      } else if (mergeMarker) {
+        mergeMarker.remove();
+        mergeMarker = null;
+      }
     }
 
     // coords already [lng, lat]. heading deg (0=N, cw) or null. speed m/s or null.
@@ -534,7 +591,7 @@ function buildMapHtml({ center, fireLat, fireLng, fireAddress, routeCoords, styl
 
 export default function RouteScreen() {
   const webViewRef = useRef(null);
-  const { status, deviationState, token, refreshStatus } = useAuth();
+  const { status, station, deviationState, token, refreshStatus } = useAuth();
   const location = useDeviceLocation();
   const [following, setFollowing] = useState(true);
   const [manningBusy, setManningBusy] = useState(false);
@@ -548,6 +605,11 @@ export default function RouteScreen() {
   const fireLat     = incident?.fire_latitude  ?? null;
   const fireLng     = incident?.fire_longitude ?? null;
   const fireAddress = incident?.fire_address   ?? null;
+
+  // Cached at login (see AuthContext) — never re-fetched by the status poll.
+  const stationLat  = station?.station_latitude  ?? null;
+  const stationLng  = station?.station_longitude ?? null;
+  const stationName = station?.station_name      ?? null;
 
   // Once the incident is closed, the dispatch (and its route_wkt) may linger in
   // status for a beat before the backend tears it down. Drop the route locally
@@ -566,14 +628,19 @@ export default function RouteScreen() {
   const styleUrl = useMemo(() => pickStyleUrl(), []);
 
   const html = useMemo(
-    () => buildMapHtml({ center, fireLat, fireLng, fireAddress, routeCoords, styleUrl }),
+    () => buildMapHtml({
+      center, fireLat, fireLng, fireAddress, routeCoords, styleUrl,
+      stationLat, stationLng, stationName,
+    }),
     // Rebuild (and thus remount the WebView) only when the incident or basemap
     // changes. The route is intentionally NOT a dependency: manning/unmanning
     // swaps route_wkt, and remounting here would cold-start the whole map
     // (CDN + tiles) and drop the pin. Route changes are pushed into the live
     // map via injectJavaScript(setRoute) below instead.
+    // The station coords are cached at login and so are stable in practice —
+    // they only shift if an admin corrects the station, which is worth a remount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fireLat, fireLng, fireAddress, styleUrl],
+    [fireLat, fireLng, fireAddress, styleUrl, stationLat, stationLng, stationName],
   );
 
   // Push connector updates into the live WebView without re-mounting it.
@@ -583,10 +650,16 @@ export default function RouteScreen() {
     // active route left to deviate from.
     if (!isClosed && deviationState?.isDeviated && deviationState.connectorGeoJSON?.coordinates) {
       // GeoJSON coordinates are already [lng, lat] — MapLibre uses the same order.
-      const coords = deviationState.connectorGeoJSON.coordinates;
-      webViewRef.current.injectJavaScript(`setConnector(${JSON.stringify(coords)}); true;`);
+      // merge_point is a foreign member the backend adds when the branch
+      // converges onto the dispatch route; null means it never does.
+      const { coordinates: coords, merges, merge_point: mergePoint } =
+        deviationState.connectorGeoJSON;
+      const mergeArg = merges && mergePoint ? JSON.stringify(mergePoint) : 'null';
+      webViewRef.current.injectJavaScript(
+        `setConnector(${JSON.stringify(coords)}, ${mergeArg}); true;`
+      );
     } else {
-      webViewRef.current.injectJavaScript(`setConnector([]); true;`);
+      webViewRef.current.injectJavaScript(`setConnector([], null); true;`);
     }
   }, [deviationState, isClosed]);
 
