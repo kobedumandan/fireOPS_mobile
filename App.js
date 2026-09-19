@@ -39,7 +39,14 @@ function MainTabs() {
 }
 
 function RootNavigator() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, restoring } = useAuth();
+  if (restoring) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.bgBase, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator color={Colors.accentFire} size="large" />
+      </View>
+    );
+  }
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       {isAuthenticated ? (

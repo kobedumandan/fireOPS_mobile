@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../constants/colors";
-import { markContained } from "../constants/api";
+import { markArrived, markContained } from "../constants/api";
 import ConfirmModal from "./ConfirmModal";
 
 function statusPalette(status) {
@@ -48,10 +48,18 @@ export default function IncidentDetailsModal({
   isTeamLeader,
   token,
   onContained,
+  onArrived,
   onCreateReport,
 }) {
   const [containing, setContaining] = useState(false);
   const [containConfirm, setContainConfirm] = useState(false);
+  const [arriving, setArriving] = useState(false);
+  const [arriveConfirm, setArriveConfirm] = useState(false);
+
+  // The crew must be on scene before the fire can be marked contained, so the
+  // arrival action takes the footer while the dispatch is still en route.
+  const dispatchStatus = dispatch?.dispatch_status ?? null;
+  const enRoute = dispatchStatus === "dispatched" || dispatchStatus === "en_route";
 
   const fireStatus = incident?.fire_status ?? null;
   const isContained = fireStatus === "contained" || fireStatus === "closed";
@@ -84,6 +92,23 @@ export default function IncidentDetailsModal({
   const handleContain = () => {
     if (!token || !dispatch?.dispatch_id || containing) return;
     setContainConfirm(true);
+  };
+
+  const confirmArrive = async () => {
+    if (!token || !dispatch?.dispatch_id) return;
+    setArriving(true);
+    try {
+      await markArrived(token, dispatch.dispatch_id);
+      setArriveConfirm(false);
+      await onArrived?.();
+    } catch (err) {
+      setArriveConfirm(false);
+      Alert.alert("Incident", err.message ?? "Could not mark arrival.");
+      // A 409 means a teammate already marked arrival; pull the fresh status.
+      await onArrived?.();
+    } finally {
+      setArriving(false);
+    }
   };
 
   const confirmContain = async () => {
@@ -154,6 +179,16 @@ export default function IncidentDetailsModal({
 
             <View style={styles.divider} />
 
+            <Row
+              label="Dispatch"
+              value={
+                enRoute
+                  ? "En route"
+                  : dispatchStatus === "on_scene"
+                  ? "On scene"
+                  : dispatchStatus
+              }
+            />
             <Row label="Fire ID" value={incident?.fire_id != null ? `#${incident.fire_id}` : "—"} />
             <Row label="Address" value={incident?.fire_address} />
             <Row label="Area" value={incident?.fire_location_name} />
@@ -170,7 +205,18 @@ export default function IncidentDetailsModal({
 
           {/* Bottom action */}
           <View style={styles.footer}>
-            {isContained ? (
+            {enRoute && !isContained ? (
+              <TouchableOpacity
+                style={styles.containBtn}
+                onPress={() => !arriving && setArriveConfirm(true)}
+                activeOpacity={0.85}
+                disabled={arriving}
+              >
+                <Text style={styles.containBtnText}>
+                  {arriving ? "Marking..." : "Arrived on Scene"}
+                </Text>
+              </TouchableOpacity>
+            ) : isContained ? (
               <>
                 <View style={[styles.containBtn, styles.containedDone]}>
                   <Ionicons
@@ -218,6 +264,17 @@ export default function IncidentDetailsModal({
           </View>
         </View>
       </View>
+
+      <ConfirmModal
+        visible={arriveConfirm}
+        title="Arrived on Scene?"
+        message="Confirm your team has reached the incident. Dispatchers will be notified and the arrival time is recorded."
+        confirmLabel="Confirm Arrival"
+        tone="primary"
+        busy={arriving}
+        onConfirm={confirmArrive}
+        onCancel={() => setArriveConfirm(false)}
+      />
 
       <ConfirmModal
         visible={containConfirm}

@@ -32,6 +32,31 @@ export async function setTruckManning(token, dispatchId, manning) {
   return res.json();
 }
 
+// Any crew member marks the team as arrived on scene. Moves the dispatch to
+// 'on_scene' and records the arrival time used for response-time metrics.
+export async function markArrived(token, dispatchId) {
+  const res = await fetch(`${BASE_URL}/api/dispatch/${dispatchId}/arrived`, {
+    method: 'PATCH',
+    headers: authHeaders(token),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => null);
+    throw new Error(detail?.detail ?? 'Failed to mark arrival');
+  }
+  return res.json();
+}
+
+// Revoke the token server-side so it can't be reused after sign-out.
+// Best-effort: a failure here must never block the local sign-out.
+export async function revokeToken(token) {
+  try {
+    await fetch(`${BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+      headers: authHeaders(token),
+    });
+  } catch { /* offline — the token still expires on its own */ }
+}
+
 // Personnel mark the dispatch's incident as contained.
 export async function markContained(token, dispatchId) {
   const res = await fetch(`${BASE_URL}/api/dispatch/${dispatchId}/contain`, {

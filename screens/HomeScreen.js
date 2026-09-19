@@ -220,6 +220,7 @@ export default function HomeScreen({ navigation }) {
         isTeamLeader={isTeamLeader}
         token={token}
         onContained={refreshStatus}
+        onArrived={refreshStatus}
         onCreateReport={() =>
           navigation.navigate("Report", {
             incident,

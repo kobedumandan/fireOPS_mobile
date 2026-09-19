@@ -29,7 +29,8 @@
           "photosPermission": "FireGIS needs access to your photos so you can attach scene photographs to an incident report.",
           "cameraPermission": "FireGIS needs camera access so you can take scene photographs for an incident report."
         }
-      ]
+      ],
+      "expo-secure-store"
     ]
   }
 }
