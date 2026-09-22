@@ -55,16 +55,32 @@ function buildMapHtml({
     html, body, #map { width: 100%; height: 100%; background: #0a0c0f; }
     .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo { display: none !important; }
 
-    .user-puck { position: relative; width: 26px; height: 26px;
-                 display: flex; align-items: center; justify-content: center; }
-    .user-dot  { width: 16px; height: 16px; border-radius: 50%;
-                 background: #3b82f6; border: 3px solid #fff;
-                 box-shadow: 0 0 0 2px rgba(59,130,246,0.35), 0 0 12px rgba(59,130,246,0.9); }
-    .user-cone { position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-                 width: 0; height: 0;
-                 border-left: 8px solid transparent;
-                 border-right: 8px solid transparent;
-                 border-bottom: 13px solid #3b82f6; }
+    /* The puck is a map-aligned marker (pitchAlignment/rotationAlignment 'map'),
+       so MapLibre writes the map's own rotateX(pitch)/rotateZ(bearing) onto this
+       element and everything inside is drawn in the ground plane — painted onto
+       the road rather than billboarded at the camera. preserve-3d keeps that
+       plane a real 3D context, so the chevron can lift off the tarmac with
+       translateZ and gain actual height in the tilted view. */
+    .user-puck   { position: relative; width: 48px; height: 48px;
+                 transform-style: preserve-3d; }
+    .user-puck > * { position: absolute; top: 50%; left: 50%; }
+
+    /* Flat on the road: glow disc, then a contact shadow directly under the
+       chevron so the lifted arrow reads as hovering rather than floating free. */
+    .user-halo   { width: 46px; height: 46px; border-radius: 50%;
+                 transform: translate(-50%, -50%);
+                 background: radial-gradient(circle,
+                   rgba(59,130,246,0.40) 0%,
+                   rgba(59,130,246,0.16) 55%,
+                   rgba(59,130,246,0.00) 72%); }
+    .user-shadow { width: 22px; height: 22px; border-radius: 50%;
+                 transform: translate(-50%, -50%);
+                 background: rgba(0,0,0,0.5); filter: blur(4px); }
+
+    /* The navigation chevron itself, raised ~13px above the road surface. No
+       CSS filter here: a filter flattens the element out of the 3D context and
+       would drop it back onto the tarmac. */
+    .user-arrow  { transform: translate(-50%, -55%) translateZ(13px); }
 
     .fire-puck { position: relative; width: 18px; height: 18px; border-radius: 50%;
                  background: #ff4d1a; border: 2px solid #ff7a4d;
@@ -114,6 +130,11 @@ function buildMapHtml({
     var hasUserLocation = false;
     var followMode      = true;
     var userMarker      = null;
+    // Puck heading, eased independently of the camera. While following, this
+    // tracks the camera exactly; once the driver pans away (followMode off) the
+    // camera freezes but the chevron keeps facing the direction of travel.
+    var puckBearing     = 0;
+    var lastPuckBearing = 0; // last value written to the marker (churn guard)
     // Animated route dashes look nice but re-tessellate the whole line ~14x/sec,
     // which is a real perf drain in the tilted 3D view. Off by default.
     var ANIMATE_FLOW    = false;
@@ -196,7 +217,17 @@ function buildMapHtml({
       current.pitch   = lerp(current.pitch, target.pitch, 0.08);
       current.bearing = lerpAngle(current.bearing, target.bearing, 0.2);
 
-      if (userMarker) userMarker.setLngLat([current.lng, current.lat]);
+      puckBearing = lerpAngle(puckBearing, target.bearing, 0.2);
+
+      if (userMarker) {
+        userMarker.setLngLat([current.lng, current.lat]);
+        // setRotation() rewrites the element's transform, so only touch it once
+        // the heading has actually moved enough to be visible.
+        if (Math.abs(((puckBearing - lastPuckBearing + 540) % 360) - 180) > 0.5) {
+          userMarker.setRotation(puckBearing);
+          lastPuckBearing = puckBearing;
+        }
+      }
 
       // Snap the eased position onto the route every frame so (a) the line trims
       // smoothly in lockstep with the gliding puck instead of in GPS-fix-sized
@@ -317,13 +348,28 @@ function buildMapHtml({
         .addTo(map);
       ` : ''}
 
-      // User puck marker.
+      // User puck marker. 'map' alignment on both axes lays the puck into the
+      // road surface and ties its rotation to true compass heading, so the
+      // chevron keeps pointing down the street even when the camera is turned.
+      // Left at the default 'viewport' it renders as a flat sticker facing the
+      // camera, which reads as hovering beside the road in a pitched view.
       var puck = document.createElement('div');
       puck.className = 'user-puck';
-      puck.innerHTML = '<div class="user-cone"></div><div class="user-dot"></div>';
-      puck.style.display = hasUserLocation ? 'flex' : 'none';
-      userMarker = new maplibregl.Marker({ element: puck })
+      puck.innerHTML =
+        '<div class="user-halo"></div>' +
+        '<div class="user-shadow"></div>' +
+        '<svg class="user-arrow" width="30" height="30" viewBox="0 0 24 24">' +
+          '<path d="M12 2 L20.5 21 L12 16.2 L3.5 21 Z" fill="#3b82f6" ' +
+                'stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>' +
+        '</svg>';
+      puck.style.display = hasUserLocation ? 'block' : 'none';
+      userMarker = new maplibregl.Marker({
+        element:           puck,
+        pitchAlignment:    'map',
+        rotationAlignment: 'map',
+      })
         .setLngLat([current.lng, current.lat])
+        .setRotation(puckBearing)
         .addTo(map);
 
       setRoute(${routeJson});
@@ -542,8 +588,9 @@ function buildMapHtml({
         // Snap immediately on the first fix so we don't ease in from Panabo.
         current.lng = target.lng; current.lat = target.lat;
         current.zoom = target.zoom; current.pitch = target.pitch;
+        puckBearing = target.bearing; // likewise, don't spin in from due north
         hasUserLocation = true;
-        if (userMarker) userMarker.getElement().style.display = 'flex';
+        if (userMarker) userMarker.getElement().style.display = 'block';
       }
     }
 
