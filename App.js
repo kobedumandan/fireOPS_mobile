@@ -66,23 +66,20 @@ function RootNavigator() {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     BarlowCondensed_400Regular,
     BarlowCondensed_600SemiBold,
     BarlowCondensed_700Bold,
     BarlowCondensed_900Black,
     ShareTechMono_400Regular,
 
-    AxiformaRegular: require('./components/fonts/Axiforma/Axiforma Regular.otf'),
-    AxiformaBold: require('./components/fonts/Axiforma/Axiforma Bold.otf'),
-    AxiformaLight: require('./components/fonts/Axiforma/Axiforma Light.otf'),
-    AxiformaBlack: require('./components/fonts/Axiforma/Axiforma Black.otf'),
-    AxiformaBold: require('./components/fonts/Axiforma/Axiforma Medium.otf'),
-    AxiformaLight: require('./components/fonts/Axiforma/Axiforma Semi Bold.otf'),
-    AxiformaBlack: require('./components/fonts/Axiforma/Axiforma Thin.otf'),
+    AxiformaRegular: require('./components/fonts/Axiforma/Axiforma-Regular.otf'),
+    AxiformaBold: require('./components/fonts/Axiforma/Axiforma-Medium.otf'),
+    AxiformaLight: require('./components/fonts/Axiforma/Axiforma-SemiBold.otf'),
+    AxiformaBlack: require('./components/fonts/Axiforma/Axiforma-Thin.otf'),
   });
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded && !fontError) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.bgBase, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator color={Colors.accentFire} size="large" />
