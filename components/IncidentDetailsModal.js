@@ -63,8 +63,9 @@ export default function IncidentDetailsModal({
 
   const fireStatus = incident?.fire_status ?? null;
   const isContained = fireStatus === "contained" || fireStatus === "closed";
-  // The report can only be filed while the fire is contained (not yet closed).
-  const canReport = fireStatus === "contained";
+  // The report can only be filed while the fire is contained (not yet closed),
+  // and only by the team leader — filing it closes the incident.
+  const canReport = fireStatus === "contained" && isTeamLeader;
   const pal = statusPalette(fireStatus);
 
   const dispatchId = dispatch?.dispatch_id ? `DISP-${dispatch.dispatch_id}` : "—";
@@ -242,6 +243,10 @@ export default function IncidentDetailsModal({
                     {/* <Ionicons name="document-text" size={16} color="#fff" /> */}
                     <Text style={styles.containBtnText}>Create Report</Text>
                   </TouchableOpacity>
+                ) : fireStatus === "contained" ? (
+                  <Text style={[styles.leaderHint, { marginTop: 8 }]}>
+                    The team leader will file the incident report.
+                  </Text>
                 ) : null}
               </>
             ) : isTeamLeader ? (
