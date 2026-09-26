@@ -8,3 +8,5 @@ ios/
 
 # Node Modules
 node_modules/
+# Local environment
+.env

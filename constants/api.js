@@ -1,4 +1,9 @@
-export const BASE_URL = 'https://deacon-overcook-heftiness.ngrok-free.dev';
+// Set EXPO_PUBLIC_API_BASE_URL in .env (see .env.example) when the tunnel
+// changes, then restart Expo with `npx expo start -c` — the value is inlined
+// at bundle time, so a plain reload won't pick it up.
+export const BASE_URL = (
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://deacon-overcook-heftiness.ngrok-free.dev'
+).replace(/\/+$/, '');
 
 // WebSocket endpoint derived from BASE_URL (https→wss, http→ws). The mobile app
 // subscribes here to learn about route/incident/dispatch changes the instant
