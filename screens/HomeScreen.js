@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   name: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 18,
     color: Colors.textPrimary,
     letterSpacing: -1,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     // borderColor: 'white',
   },
   perAVText: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 15,
     color: Colors.textPrimary,
     letterSpacing: 0.5,
@@ -368,14 +368,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusLabel: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 10.8,
     letterSpacing: -0.2 ,
     color: Colors.textSecondary,
     // textTransform: "uppercase",
   },
   statusValue: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 11,
     letterSpacing: -0.3,
   },

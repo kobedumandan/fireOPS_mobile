@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgPanel,
   },
   headerTitle: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 20,
     color: Colors.textPrimary,
     letterSpacing: -1,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   sectionHeader: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 11,
     color: Colors.textSecondary,
     letterSpacing: -0.2,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   rowLabel: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 13,
     color: Colors.textPrimary,
     letterSpacing: -0.3,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileName: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 18,
     color: Colors.textPrimary,
     letterSpacing: -1,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   logoutText: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 12.8,
     color: '#fff',
     letterSpacing: -0.3,

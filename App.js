@@ -73,10 +73,10 @@ export default function App() {
     BarlowCondensed_900Black,
     ShareTechMono_400Regular,
 
+    // Each key loads the weight it is named after.
     AxiformaRegular: require('./components/fonts/Axiforma/Axiforma-Regular.otf'),
-    AxiformaBold: require('./components/fonts/Axiforma/Axiforma-Medium.otf'),
-    AxiformaLight: require('./components/fonts/Axiforma/Axiforma-SemiBold.otf'),
-    AxiformaBlack: require('./components/fonts/Axiforma/Axiforma-Thin.otf'),
+    AxiformaMedium: require('./components/fonts/Axiforma/Axiforma-Medium.otf'),
+    AxiformaBlack: require('./components/fonts/Axiforma/Axiforma-Black.otf'),
   });
 
   if (!fontsLoaded && !fontError) {

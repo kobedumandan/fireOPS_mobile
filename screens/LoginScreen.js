@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   org: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 7.8,
     color: Colors.accentFire,
     letterSpacing: -0.1,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   fieldLabel: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 10.8,
     letterSpacing: -0.2,
     // textTransform: 'uppercase',
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   btnText: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 10.8,
     color: '#fff',
     letterSpacing: -0.3,
