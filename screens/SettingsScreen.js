@@ -6,6 +6,7 @@ import {
   Switch,
   ScrollView,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -13,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 import { useAuth } from '../context/AuthContext';
 import ConfirmModal from '../components/ConfirmModal';
+import { sendTestPush } from '../utils/notifications';
 
 function SectionHeader({ label }) {
   return <Text style={styles.sectionHeader}>{label}</Text>;
@@ -52,10 +54,29 @@ function avatarInitial(user) {
 }
 
 export default function SettingsScreen() {
-  const { logout, user } = useAuth();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { logout, user, token, pushPrefs, setPushPrefs, pushState } = useAuth();
+  const [testing, setTesting] = useState(false);
   const [locationTracking, setLocationTracking] = useState(true);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
+
+  const runTestAlert = async () => {
+    if (testing) return;
+    setTesting(true);
+    try {
+      await sendTestPush(token);
+      Alert.alert('Test Alert', 'Sent. It should arrive on this phone within a few seconds.');
+    } catch (err) {
+      Alert.alert('Test Alert', err.message);
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const pushNote =
+    pushState.state === 'error'      ? pushState.message :
+    pushState.state === 'registering' ? 'Registering this phone…' :
+    pushState.state === 'on'          ? 'This phone receives dispatch alerts, even when the app is closed.' :
+    'Dispatch alerts are off. You will only see a dispatch while the app is open.';
 
   const name    = profileDisplayName(user);
   const initial = avatarInitial(user);
@@ -97,8 +118,28 @@ export default function SettingsScreen() {
             label="Push Notifications"
             rightElement={
               <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
+                value={pushPrefs.enabled}
+                onValueChange={(v) => setPushPrefs({ enabled: v })}
+                trackColor={{ false: Colors.border, true: Colors.accentFire }}
+                thumbColor="#fff"
+              />
+            }
+          />
+          <Text
+            style={[styles.note, pushState.state === 'error' && { color: Colors.accentAmber }]}
+          >
+            {pushNote}
+          </Text>
+          <Divider />
+          <SettingRow
+            icon="volume-high-outline"
+            label="Alert Sound"
+            value={pushPrefs.sound ? 'Sound' : 'Vibrate'}
+            rightElement={
+              <Switch
+                value={pushPrefs.sound}
+                onValueChange={(v) => setPushPrefs({ sound: v })}
+                disabled={!pushPrefs.enabled}
                 trackColor={{ false: Colors.border, true: Colors.accentFire }}
                 thumbColor="#fff"
               />
@@ -106,15 +147,10 @@ export default function SettingsScreen() {
           />
           <Divider />
           <SettingRow
-            icon="warning-outline"
-            label="Emergency Alerts"
-            value="All"
-          />
-          <Divider />
-          <SettingRow
-            icon="volume-high-outline"
-            label="Alert Sound"
-            value="Siren"
+            icon="paper-plane-outline"
+            label="Send Test Alert"
+            value={testing ? 'Sending…' : null}
+            onPress={pushState.state === 'on' ? runTestAlert : undefined}
           />
         </View>
 
@@ -276,6 +312,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     letterSpacing: -0.2,
+  },
+  note: {
+    fontFamily: 'AxiformaRegular',
+    fontSize: 11,
+    lineHeight: 15,
+    color: Colors.textSecondary,
+    paddingHorizontal: 14,
+    paddingBottom: 10,
+    marginTop: -4,
   },
   divider: {
     height: 1,

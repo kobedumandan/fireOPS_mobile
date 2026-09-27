@@ -3,6 +3,8 @@ import { AppState } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useLocationTracking } from '../hooks/useLocationTracking';
 import { useStatusSocket } from '../hooks/useStatusSocket';
+import { useAlertLog } from '../hooks/useAlertLog';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { BASE_URL, authHeaders, revokeToken } from '../constants/api';
 
 const STATUS_POLL_MS = 10_000;
@@ -88,6 +90,12 @@ export function AuthProvider({ children }) {
     })();
   }, []);
 
+  const { alerts, unreadAlerts, markAlertsRead, clearAlerts } =
+    useAlertLog({ token, status, deviationState });
+
+  const { pushPrefs, setPushPrefs, pushState, unregisterForLogout } =
+    usePushNotifications({ token, onAlert: refreshStatus });
+
   // Instant push: refresh status the moment the backend broadcasts a route /
   // incident / dispatch change, instead of waiting for the next poll below.
   useStatusSocket({ token, onRefresh: refreshStatus });
@@ -137,7 +145,12 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    if (token) revokeToken(token);
+    if (token) {
+      // Unregister first: once revoked, the token can't authenticate the call,
+      // and this phone would keep receiving the old user's dispatches.
+      const t = token;
+      unregisterForLogout(t).finally(() => revokeToken(t));
+    }
     clearAuthState();
   };
 
@@ -148,6 +161,13 @@ export function AuthProvider({ children }) {
       status,
       station,
       deviationState,
+      alerts,
+      unreadAlerts,
+      markAlertsRead,
+      clearAlerts,
+      pushPrefs,
+      setPushPrefs,
+      pushState,
       login,
       logout,
       updateDispatchStatus,

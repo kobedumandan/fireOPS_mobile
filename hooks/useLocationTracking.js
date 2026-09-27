@@ -1,6 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { AppState } from 'react-native';
 import * as Location from 'expo-location';
 import { BASE_URL, authHeaders } from '../constants/api';
+import {
+  onTrackingResult,
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from '../tasks/locationTask';
 
 const ACTIVE_STATUSES = new Set(['dispatched', 'en_route', 'on_scene']);
 const INTERVAL_MS_DISPATCHED = 3_000;
@@ -14,7 +20,13 @@ function intervalForStatus(status) {
 }
 
 /**
- * Starts a 30-second location tracking loop whenever the dispatch is active.
+ * Tracks the responder's position whenever their dispatch is active.
+ *
+ * Preferred path: the background task in tasks/locationTask.js, which keeps
+ * reporting with the screen off (needs "Allow all the time" location access).
+ * If that permission is refused, falls back to the foreground loop below,
+ * which only runs while the app is open.
+ *
  * Sends POST /api/location/update with the device timestamp.
  * Calls onDeviationChange({ isDeviated, connectorGeoJSON }) on every response,
  * or onDeviationChange(null) when tracking stops.
@@ -30,6 +42,7 @@ export function useLocationTracking({ token, dispatch, onDeviationChange }) {
   const permGranted   = useRef(false);
   const watchRef      = useRef(null);
   const lastFixRef    = useRef(null); // newest { latitude, longitude, timestamp }
+  const bgAskedRef    = useRef(null); // dispatch id we last prompted "all the time" for
 
   const dispatchId     = dispatch?.dispatch_id ?? null;
   const dispatchStatus = dispatch?.dispatch_status ?? null;
@@ -41,6 +54,23 @@ export function useLocationTracking({ token, dispatch, onDeviationChange }) {
     permGranted.current = status === 'granted';
     return permGranted.current;
   }, []);
+
+  // "Allow all the time". Asked for only while a dispatch is active, when the
+  // reason is obvious, and at most once per dispatch so returning to the app
+  // doesn't re-prompt a responder who already said no.
+  const requestBackgroundPermission = useCallback(async () => {
+    if (!(await requestPermission())) return false;
+    try {
+      const current = await Location.getBackgroundPermissionsAsync();
+      if (current.status === 'granted') return true;
+      if (!current.canAskAgain || bgAskedRef.current === dispatchId) return false;
+      bgAskedRef.current = dispatchId;
+      const { status } = await Location.requestBackgroundPermissionsAsync();
+      return status === 'granted';
+    } catch {
+      return false;
+    }
+  }, [requestPermission, dispatchId]);
 
   // Keep a warm GPS fix streaming in the background so each report sends the
   // latest position immediately, instead of paying the cold-start latency of
@@ -122,26 +152,61 @@ export function useLocationTracking({ token, dispatch, onDeviationChange }) {
   }, [token, dispatchId, requestPermission, onDeviationChange]);
 
   useEffect(() => {
-    if (!isActive) {
-      isActiveRef.current = false;
+    const stopForeground = () => {
       clearInterval(intervalRef.current);
+      intervalRef.current = null;
       watchRef.current?.remove();
       watchRef.current  = null;
       lastFixRef.current = null;
+    };
+
+    if (!isActive) {
+      isActiveRef.current = false;
+      stopForeground();
+      stopBackgroundTracking();
       onDeviationChange?.(null);
       return;
     }
 
     isActiveRef.current = true;
-    startWatch();
-    sendLocation();
-    intervalRef.current = setInterval(sendLocation, intervalForStatus(dispatchStatus));
+    let cancelled = false;
+    let inBackgroundMode = false;
+    const intervalMs = intervalForStatus(dispatchStatus);
+    const unsubscribe = onTrackingResult((result) => onDeviationChange?.(result));
+
+    const startTracking = async () => {
+      if (await requestBackgroundPermission()) {
+        try {
+          await startBackgroundTracking({ token, dispatchId, intervalMs });
+          if (cancelled) return;
+          inBackgroundMode = true;
+          stopForeground();
+          return;
+        } catch {
+          // Android refuses to start a foreground service while the app is in
+          // the background; the AppState listener below retries on return.
+        }
+      }
+      if (cancelled || intervalRef.current) return;
+      startWatch();
+      sendLocation();
+      intervalRef.current = setInterval(sendLocation, intervalMs);
+    };
+    startTracking();
+
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active' && !inBackgroundMode && !cancelled) startTracking();
+    });
 
     return () => {
+      cancelled = true;
       isActiveRef.current = false;
-      clearInterval(intervalRef.current);
-      watchRef.current?.remove();
-      watchRef.current = null;
+      unsubscribe();
+      sub.remove();
+      stopForeground();
+      // Background updates are deliberately left running here: this cleanup
+      // also runs on every status change, and the next run re-tunes them.
+      // They stop in the !isActive branch or when the backend ends the dispatch.
     };
-  }, [isActive, dispatchId, dispatchStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isActive, dispatchId, dispatchStatus, token]); // eslint-disable-line react-hooks/exhaustive-deps
 }
