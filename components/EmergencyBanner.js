@@ -6,7 +6,7 @@ export default function EmergencyBanner({ incidentId, location }) {
   const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 0.25,
@@ -19,7 +19,9 @@ export default function EmergencyBanner({ incidentId, location }) {
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    loop.start();
+    return () => loop.stop();
   }, [opacity]);
 
   return (

@@ -81,7 +81,9 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      // Android: the window already resizes for the keyboard (adjustResize),
+      // so shrinking here too double-counts it and leaves a gap / jitters.
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <StatusBar style="light" />
       <ScrollView

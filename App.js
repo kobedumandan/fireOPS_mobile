@@ -1,4 +1,7 @@
 import React from 'react';
+// Must load before anything else: defines the background location task so the
+// OS can run it even when the app was relaunched headless.
+import './tasks/locationTask';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -18,9 +21,12 @@ import HomeScreen     from './screens/HomeScreen';
 import RouteScreen    from './screens/RouteScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import ReportScreen   from './screens/ReportScreen';
+import AlertsScreen   from './screens/AlertsScreen';
+import TrucksScreen   from './screens/TrucksScreen';
 import BottomNav      from './components/BottomNav';
 import Colors         from './constants/colors';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { navigationRef } from './utils/navigation';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -57,6 +63,16 @@ function RootNavigator() {
             component={ReportScreen}
             options={{ animation: 'slide_from_right' }}
           />
+          <Stack.Screen
+            name="Alerts"
+            component={AlertsScreen}
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="Trucks"
+            component={TrucksScreen}
+            options={{ animation: 'slide_from_right' }}
+          />
         </>
       ) : (
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -90,7 +106,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <RootNavigator />
         </NavigationContainer>
       </AuthProvider>

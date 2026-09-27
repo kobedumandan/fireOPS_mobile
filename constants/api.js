@@ -51,6 +51,17 @@ export async function markArrived(token, dispatchId) {
   return res.json();
 }
 
+// Fleet list with live status and last position; TrucksScreen filters it to
+// the responder's station.
+export async function fetchTrucks(token) {
+  const res = await fetch(`${BASE_URL}/api/trucks`, { headers: authHeaders(token) });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => null);
+    throw new Error(detail?.detail ?? 'Failed to load trucks');
+  }
+  return res.json();
+}
+
 // Revoke the token server-side so it can't be reused after sign-out.
 // Best-effort: a failure here must never block the local sign-out.
 export async function revokeToken(token) {

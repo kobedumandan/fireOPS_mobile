@@ -1,26 +1,35 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import { View, Text, Animated, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
 
-const ACCENT_MAP = {
-  fire:  Colors.accentFire,
-  amber: Colors.accentAmber,
-  blue:  Colors.accentBlue,
-  green: Colors.accentGreen,
-  muted: Colors.textMuted,
+// Tile tint + glyph colour per variant — the same tinted-puck treatment the
+// web dashboard's alert panel uses, so an alert reads the same on both.
+const TONE = {
+  fire:  { fg: Colors.accentFire,    bg: Colors.accentFireDim },
+  amber: { fg: Colors.accentAmber,   bg: Colors.accentAmberDim },
+  blue:  { fg: Colors.accentBlue,    bg: Colors.accentBlueDim },
+  green: { fg: Colors.accentGreen,   bg: Colors.accentGreenDim },
+  muted: { fg: Colors.textSecondary, bg: Colors.bgHover },
 };
 
-export default function AlertItem({ title, body, time, variant = 'muted', unread = false }) {
-  const accentColor = ACCENT_MAP[variant] ?? Colors.textMuted;
-
+export default function AlertItem({
+  title,
+  body,
+  time,
+  icon = 'notifications',
+  variant = 'muted',
+  unread = false,
+}) {
+  const tone = TONE[variant] ?? TONE.muted;
   const dotOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!unread) return;
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(dotOpacity, { toValue: 0.2, duration: 500, useNativeDriver: true }),
-        Animated.timing(dotOpacity, { toValue: 1,   duration: 500, useNativeDriver: true }),
+        Animated.timing(dotOpacity, { toValue: 0.25, duration: 500, useNativeDriver: true }),
+        Animated.timing(dotOpacity, { toValue: 1,    duration: 500, useNativeDriver: true }),
       ])
     );
     anim.start();
@@ -28,65 +37,90 @@ export default function AlertItem({ title, body, time, variant = 'muted', unread
   }, [unread, dotOpacity]);
 
   return (
-    <TouchableOpacity
-      style={[styles.item, { borderLeftColor: accentColor }]}
-      activeOpacity={0.75}
+    <View
+      style={[
+        styles.card,
+        unread && { borderColor: tone.fg + '40', backgroundColor: tone.bg },
+      ]}
     >
-      <View style={styles.top}>
-        <View style={styles.titleRow}>
-          <Text style={styles.title}>{title}</Text>
-          {unread && (
-            <Animated.View style={[styles.unreadDot, { opacity: dotOpacity, backgroundColor: Colors.accentFire }]} />
-          )}
-        </View>
-        <Text style={styles.time}>{time}</Text>
+      <View style={[styles.iconWrap, { backgroundColor: unread ? Colors.bgPanel : tone.bg }]}>
+        <Ionicons name={icon} size={17} color={tone.fg} />
+        {unread && (
+          <Animated.View
+            style={[styles.unreadDot, { backgroundColor: tone.fg, opacity: dotOpacity }]}
+          />
+        )}
       </View>
-      <Text style={styles.body}>{body}</Text>
-    </TouchableOpacity>
+
+      <View style={styles.body}>
+        <View style={styles.top}>
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          <Text style={styles.time}>{time}</Text>
+        </View>
+        {body ? <Text style={styles.text}>{body}</Text> : null}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  item: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    borderLeftWidth: 3,
+  card: {
+    flexDirection: 'row',
+    gap: 12,
+    marginHorizontal: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
+    backgroundColor: Colors.bgPanel,
+    borderWidth: 1,
+    borderColor: Colors.borderDim,
+    borderRadius: 10,
+  },
+  iconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: Colors.pageDefaultBase,
+  },
+  body: {
+    flex: 1,
+    minWidth: 0,
   },
   top: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    gap: 8,
     marginBottom: 3,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 6,
-  },
   title: {
-    fontFamily: 'BarlowCondensed_700Bold',
-    fontSize: 12,
+    flex: 1,
+    fontFamily: 'AxiformaMedium',
+    fontSize: 13,
     color: Colors.textPrimary,
-  },
-  unreadDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
+    letterSpacing: -0.3,
   },
   time: {
-    fontFamily: 'ShareTechMono_400Regular',
-    fontSize: 9,
-    color: Colors.textMuted,
-    marginLeft: 8,
-    marginTop: 1,
-    flexShrink: 0,
-  },
-  body: {
-    fontSize: 10,
+    fontFamily: 'AxiformaRegular',
+    fontSize: 10.5,
     color: Colors.textSecondary,
-    lineHeight: 14,
+    letterSpacing: -0.2,
+  },
+  text: {
+    fontFamily: 'AxiformaRegular',
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: Colors.textSecondary,
+    letterSpacing: -0.2,
   },
 });
