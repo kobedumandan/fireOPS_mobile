@@ -10,3 +10,6 @@ ios/
 node_modules/
 # Local environment
 .env
+
+# Tests (kept local)
+tests/
