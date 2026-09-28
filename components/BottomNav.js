@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     width: CIRCLE_SIZE,
   },
   label: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 9.8,
     letterSpacing: -0.1,
     marginTop: 1,

@@ -1,4 +1,9 @@
-export const BASE_URL = 'https://deacon-overcook-heftiness.ngrok-free.dev';
+// Set EXPO_PUBLIC_API_BASE_URL in .env (see .env.example) when the tunnel
+// changes, then restart Expo with `npx expo start -c` — the value is inlined
+// at bundle time, so a plain reload won't pick it up.
+export const BASE_URL = (
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://deacon-overcook-heftiness.ngrok-free.dev'
+).replace(/\/+$/, '');
 
 // WebSocket endpoint derived from BASE_URL (https→wss, http→ws). The mobile app
 // subscribes here to learn about route/incident/dispatch changes the instant
@@ -42,6 +47,17 @@ export async function markArrived(token, dispatchId) {
   if (!res.ok) {
     const detail = await res.json().catch(() => null);
     throw new Error(detail?.detail ?? 'Failed to mark arrival');
+  }
+  return res.json();
+}
+
+// Fleet list with live status and last position; TrucksScreen filters it to
+// the responder's station.
+export async function fetchTrucks(token) {
+  const res = await fetch(`${BASE_URL}/api/trucks`, { headers: authHeaders(token) });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => null);
+    throw new Error(detail?.detail ?? 'Failed to load trucks');
   }
   return res.json();
 }

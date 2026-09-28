@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   title: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 16,
     color: Colors.textPrimary,
     letterSpacing: -0.6,
@@ -160,14 +160,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   cancelText: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 11,
     color: Colors.textPrimary,
     letterSpacing: -0.3,
     textTransform: "uppercase",
   },
   confirmText: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 11,
     color: "#fff",
     letterSpacing: -0.3,

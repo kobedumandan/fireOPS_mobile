@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     paddingBottom: 19,
   },
   cardLabel: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 11,
     color: Colors.textSecondary,
     letterSpacing: -0.2,
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   cardId: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 23,
     color: Colors.textPrimary,
     letterSpacing: -1,
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   badgeText: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 8.8,
     letterSpacing: -0.5,
     textTransform: 'uppercase',
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   btnText: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 12.8,
     color: '#fff',
     letterSpacing: -0.2,

@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   title: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 16,
     color: Colors.textPrimary,
     letterSpacing: -0.6,
@@ -350,14 +350,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   idLabel: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 10,
     color: Colors.textSecondary,
     letterSpacing: -0.2,
     marginBottom: 2,
   },
   idValue: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 20,
     color: Colors.textPrimary,
     letterSpacing: -1,
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statusBadgeText: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 9.5,
     letterSpacing: -0.3,
     textTransform: "uppercase",
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     width: 92,
   },
   rowValue: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 12,
     color: Colors.textPrimary,
     letterSpacing: -0.3,
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   containBtnText: {
-    fontFamily: "AxiformaBold",
+    fontFamily: "AxiformaMedium",
     fontSize: 12.8,
     color: "#fff",
     letterSpacing: -0.4,

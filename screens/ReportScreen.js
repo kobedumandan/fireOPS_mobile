@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgPanel,
   },
   headerTitle: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 18,
     color: Colors.textPrimary,
     letterSpacing: -1,
@@ -355,14 +355,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   summaryLabel: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 10,
     color: Colors.textSecondary,
     letterSpacing: -0.2,
     marginBottom: 2,
   },
   summaryValue: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 20,
     color: Colors.textPrimary,
     letterSpacing: -1,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accentGreenDim,
   },
   containedText: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 9.5,
     color: Colors.accentGreen,
     letterSpacing: -0.3,
@@ -409,13 +409,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   label: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 12,
     color: Colors.textPrimary,
     letterSpacing: -0.3,
   },
   required: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 9,
     color: Colors.accentFire,
     letterSpacing: -0.2,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     paddingTop: 11,
   },
   photoCount: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 10,
     color: Colors.textMuted,
     letterSpacing: -0.2,
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   photoBtnText: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 12.5,
     color: Colors.textPrimary,
     letterSpacing: -0.3,
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   submitText: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 12.8,
     color: '#fff',
     letterSpacing: -0.3,

@@ -11,14 +11,20 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.bfp.firegis"
+      "bundleIdentifier": "com.bfp.firegis",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location",
+          "remote-notification"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0a0c0f"
       },
       "package": "com.bfp.firegis",
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {},
     "plugins": [
@@ -27,10 +33,31 @@
         "expo-image-picker",
         {
           "photosPermission": "FireGIS needs access to your photos so you can attach scene photographs to an incident report.",
-          "cameraPermission": "FireGIS needs camera access so you can take scene photographs for an incident report."
+          "cameraPermission": "FireGIS needs camera access so you can take scene photographs for an incident report.",
+          "microphonePermission": false
         }
       ],
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "FireGIS shares your location with the command center while you are on a dispatch.",
+          "locationAlwaysAndWhenInUsePermission": "FireGIS keeps sharing your location during a dispatch while the screen is off, so the command center can follow your team to the fire.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true,
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#ff4d1a"
+        }
+      ]
+    ],
+    "androidNavigationBar": {
+      "backgroundColor": "#0a0c0f",
+      "barStyle": "light-content"
+    }
   }
 }

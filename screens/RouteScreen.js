@@ -901,14 +901,14 @@ const styles = StyleSheet.create({
   },
   bannerText: { flexShrink: 1 },
   bannerTitle: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 14,
     color: '#ffb020',
     letterSpacing: -1,
     // textTransform: 'uppercase',
   },
   bannerSub: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 9.8,
     color: '#c8a040',
     marginTop: 1,
@@ -945,13 +945,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.12)',
   },
   speedValue: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 31,
     color: '#fff',
     lineHeight: 32,
   },
   speedUnit: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 9,
     color: '#9aa3ad',
     letterSpacing: 0.2,
@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.12)',
   },
   distValue: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 11,
     color: '#fff',
   },
@@ -1023,12 +1023,12 @@ const styles = StyleSheet.create({
   },
   manningText: { flexShrink: 1 },
   manningLabel: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 12,
     letterSpacing: -0.4,
   },
   manningSub: {
-    fontFamily: 'AxiformaBold',
+    fontFamily: 'AxiformaMedium',
     fontSize: 9,
     color: Colors.textSecondary,
     marginTop: 1,
